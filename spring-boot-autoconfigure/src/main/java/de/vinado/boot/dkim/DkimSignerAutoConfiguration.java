@@ -1,6 +1,7 @@
 package de.vinado.boot.dkim;
 
 import de.vinado.boot.dkim.javamail.DkimJavaMailSender;
+import lombok.extern.slf4j.Slf4j;
 import net.markenwerk.utils.mail.dkim.DkimSigner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -28,6 +29,7 @@ import java.util.Properties;
  *
  * @author Vincent Nadoll
  */
+@Slf4j
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(JavaMailSender.class)
 @EnableConfigurationProperties({DkimProperties.class, MailProperties.class})
@@ -38,10 +40,23 @@ class DkimSignerAutoConfiguration {
     @Conditional(PrivateKeyNotEmpty.class)
     @ConditionalOnMissingBean
     DkimSigner dkimSigner(DkimProperties properties) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
-        Resource resource = new FileSystemResource(properties.getPrivateKey());
-        DkimSigner signer = new DkimSigner(properties.getSigningDomain(), properties.getSelector(), resource.getInputStream());
-        applyProperties(properties, signer);
-        return signer;
+        log.trace("Creating bean 'dkimSigner'");
+        try {
+            Resource resource = new FileSystemResource(properties.getPrivateKey());
+            DkimSigner signer = new DkimSigner(properties.getSigningDomain(), properties.getSelector(), resource.getInputStream());
+            applyProperties(properties, signer);
+            log.debug("Successfully created an configured DKIM signer bean");
+            return signer;
+        } catch (IOException e) {
+            log.error("Unable to read private key from input stream");
+            throw e;
+        } catch (InvalidKeySpecException e) {
+            log.error("Given input stream could not be interpreted as RSA private key");
+            throw e;
+        } catch (NoSuchAlgorithmException e) {
+            log.error("RSA algorithm is not supported");
+            throw e;
+        }
     }
 
     private void applyProperties(DkimProperties properties, DkimSigner signer) {
@@ -55,8 +70,10 @@ class DkimSignerAutoConfiguration {
     @Bean
     @ConditionalOnBean(DkimSigner.class)
     DkimJavaMailSender mailSender(MailProperties mailProperties, DkimSigner signer) {
+        log.trace("Creating bean DKIM 'mailSender'");
         DkimJavaMailSender sender = new DkimJavaMailSender(signer);
         applyProperties(mailProperties, sender);
+        log.debug("Successfully created an configured DKIM mail sender bean");
         return sender;
     }
 

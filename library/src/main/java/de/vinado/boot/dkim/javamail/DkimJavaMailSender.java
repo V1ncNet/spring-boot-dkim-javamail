@@ -45,7 +45,9 @@ public class DkimJavaMailSender extends JavaMailSenderImpl {
 
     public MimeMessage createSignedMimeMessage(MimeMailMessage message) {
         try {
-            return new DkimMessage(message.getMimeMessage(), signer);
+            DkimMessage signeableMessage = new DkimMessage(message.getMimeMessage(), signer);
+            log.debug("Created signeable MIME message");
+            return signeableMessage;
         } catch (MessagingException e) {
             log.warn("DKIM messages threw a low-level exception", e);
         }
@@ -75,7 +77,9 @@ public class DkimJavaMailSender extends JavaMailSenderImpl {
 
     public MimeMessage createSignedMimeMessage(MimeMessage message) {
         try {
-            return new DkimMessage(message, signer);
+            DkimMessage signeableMessage = new DkimMessage(message, signer);
+            log.debug("Created signeable MIME message");
+            return signeableMessage;
         } catch (MessagingException e) {
             log.warn("DKIM messages threw a low-level exception", e);
         }
