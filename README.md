@@ -1,6 +1,12 @@
 Spring Boot DKIM JavaMail
 ===
 
+:exclamation: Development of version 2.x has been moved to
+[V1ncNet/mail-extensions-spring-boot](https://github.com/V1ncNet/mail-extensions-spring-boot). This repo is no
+longer active.
+
+---
+
 This project provides an easy way to digitally sign your emails. Therefore, this project uses the
 [java-utils-mail-dkim](https://github.com/markenwerk/java-utils-mail-dkim) library from Markenwerk and extends Spring's
 JavaMailSender to sign MIME messages before they were transported to the SMTP server. To verify the signed parts of the
